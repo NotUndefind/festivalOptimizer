@@ -1,0 +1,7 @@
+node_modules/
+docs/
+bmad/
+.claude/
+.DS_Store
+dist/
+*.log
