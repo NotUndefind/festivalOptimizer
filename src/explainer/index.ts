@@ -24,22 +24,14 @@ function fmt(n: number, decimals = 2): string {
 }
 
 function buildBreakdownTable(breakdown: ScoreBreakdown): string {
-  const SEP_TOP    = '┌──────────────────────┬────────┬────────┬──────────────┐';
-  const SEP_HEAD   = '│ Critère              │ Valeur │  Poids │ Contribution │';
-  const SEP_MID    = '├──────────────────────┼────────┼────────┼──────────────┤';
-  const SEP_BOTTOM = '└──────────────────────┴────────┴────────┴──────────────┘';
-
   const rows = (Object.entries(breakdown) as [keyof ScoreBreakdown, CriterionScore][]).map(
     ([key, cs]) => {
-      const label = (CRITERION_LABELS[key] + (cs.fallback ? '*' : '')).padEnd(20);
-      const value = fmt(cs.value).padStart(6);
-      const weight = fmt(cs.weight).padStart(6);
-      const contribution = fmt(cs.contribution).padStart(12);
-      return `│ ${label} │${value} │${weight} │${contribution} │`;
+      const label = CRITERION_LABELS[key] + (cs.fallback ? '*' : '');
+      return `  - ${label} : ${fmt(cs.value)} x ${fmt(cs.weight)} = ${fmt(cs.contribution)}`;
     },
   );
 
-  return [SEP_TOP, SEP_HEAD, SEP_MID, ...rows, SEP_BOTTOM].join('\n');
+  return rows.join('\n');
 }
 
 function buildSynthesis(slotScore: SlotScore): string {

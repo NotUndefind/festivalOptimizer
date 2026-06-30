@@ -52,9 +52,6 @@ describe('explainRecommendation', () => {
       expect(output).toContain('Faible affluence');
       expect(output).toContain('Faible affl. lieu');
       expect(output).toContain('Pertinence horaire');
-      expect(output).toContain('Valeur');
-      expect(output).toContain('Poids');
-      expect(output).toContain('Contribution');
     });
 
     it('affiche la phrase de synthèse', () => {
@@ -101,12 +98,10 @@ describe('explainRecommendation', () => {
       expect(output).toMatch(/\d+\.\d{2}/);
     });
 
-    it('les bordures du tableau sont présentes', () => {
+    it('chaque ligne affiche valeur x poids = contribution', () => {
       const result = recommend(DEFAULT_VISITOR, timeSlots, expositions);
       const output = explainRecommendation(result);
-      expect(output).toContain('┌');
-      expect(output).toContain('└');
-      expect(output).toContain('│');
+      expect(output).toMatch(/\d+\.\d{2} x \d+\.\d{2} = \d+\.\d{2}/);
     });
   });
 });
