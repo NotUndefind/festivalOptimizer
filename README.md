@@ -1,19 +1,21 @@
 # Festival Optimizer
 
-Outil CLI de recommandation de créneaux pour un festival de photographie. Il calcule un score pondéré pour chaque créneau disponible et recommande le meilleur selon le profil du visiteur.
+Outil CLI de recommandation pour un festival de photographie. Il calcule un score pondéré pour chaque créneau disponible et propose soit le meilleur créneau unique, soit un parcours de visites sans chevauchement, selon le profil du visiteur.
 
 ---
 
 ## Commandes
 
 ```bash
-npm install                        # Installer les dépendances
+npm install                                     # Installer les dépendances
 
-npm start                          # Lancer tous les scénarios
-npm run scenario -- <nom>          # Lancer un scénario précis (pressed | thematic | comfort | saturated)
+npm start                                       # Lancer tous les scénarios (créneau unique)
+npm start -- --parcours                         # Lancer tous les scénarios en mode parcours
+npm run scenario -- <nom>                       # Un scénario précis (pressed | thematic | comfort | saturated)
+npm run scenario -- <nom> --parcours            # Même scénario en mode parcours (-p fonctionne aussi)
 
-npm test                           # Lancer les tests unitaires
-npm run typecheck                  # Vérifier les types TypeScript
+npm test                                        # Lancer les tests unitaires
+npm run typecheck                               # Vérifier les types TypeScript
 ```
 
 ---
@@ -70,12 +72,31 @@ npm run scenario -- saturated   # Festival bondé — aucun créneau disponible
 
 ---
 
+## Mode parcours (`--parcours`)
+
+Le flag `--parcours` (alias `-p`) active un mode de recommandation séquentielle : au lieu d'un seul créneau optimal, le moteur construit un **parcours de 3 étapes maximum** sans chevauchement horaire.
+
+**Algorithme glouton** :
+1. Tous les créneaux sont scorés et classés (même logique que le mode créneau unique).
+2. Le meilleur créneau est sélectionné en premier.
+3. Chaque candidat suivant est ajouté uniquement s'il ne chevauche temporellement aucun créneau déjà retenu.
+4. Les étapes retenues sont triées par heure de début pour un affichage chronologique.
+
+```bash
+npm run scenario -- thematic --parcours   # Parcours de Sophie (photo de rue & portrait)
+npm start -- --parcours                   # Parcours pour tous les scénarios
+```
+
+Le score total affiché est la **somme des scores individuels** des étapes retenues.
+
+---
+
 ## Hypothèses
 
 - **Affluence statique** : les `estimatedAttendance` sont des valeurs fixes au moment de la recommandation. Aucune dynamique temporelle n'est modélisée (pas de montée en charge au fil de la journée).
 - **Pondérations arbitraires** : les poids par défaut et par scénario ont été définis manuellement pour illustrer des comportements distincts, sans calibration empirique.
 - **Données fictives** : les expositions, créneaux et visiteurs sont entièrement inventés pour les besoins du projet. Ils ne représentent pas un festival réel.
-- **Unicité du créneau recommandé** : le système recommande un seul créneau optimal, sans modéliser un parcours multi-créneaux.
+- **Mode par défaut — créneau unique** : sans `--parcours`, le système recommande un seul créneau optimal. Le mode parcours étend ce comportement mais reste limité à 3 étapes sans optimisation globale de l'enchaînement.
 
 ---
 
@@ -83,7 +104,7 @@ npm run scenario -- saturated   # Festival bondé — aucun créneau disponible
 
 - **Pas de temps réel** : les données d'affluence sont statiques. Un système réel nécessiterait une mise à jour en continu (API billetterie, comptage physique).
 - **Heuristique non optimale** : la somme pondérée est une heuristique simple. Elle ne garantit pas l'optimum global (par exemple, un algorithme multi-objectifs trouverait potentiellement de meilleures solutions).
-- **Périmètre créneau seul** : le modèle recommande un créneau optimal (en tenant compte de la saturation de son lieu), mais ne planifie pas un *parcours* — pas d'enchaînement de visites, de déplacements entre lieux, ni de gestion des conflits d'horaires entre créneaux.
+- **Parcours glouton non optimal** : le mode `--parcours` construit une séquence sans chevauchement par sélection gloutonne (meilleur score d'abord). Il ne garantit pas le parcours global optimal — un algorithme exhaustif ou par backtracking pourrait trouver une meilleure combinaison. Les déplacements entre lieux ne sont pas modélisés (pas de contrainte de temps de trajet).
 - **Scoring thématique simplifié** : la correspondance thématique est calculée par intersection exacte de chaînes de caractères, sans similarité sémantique ni hiérarchie de thèmes.
 
 ---
@@ -92,11 +113,11 @@ npm run scenario -- saturated   # Festival bondé — aucun créneau disponible
 
 ```
 src/
-  cli/          Entrée CLI — parsing argument, orchestration
+  cli/          Entrée CLI — parsing args, flag --parcours, orchestration
   config/       Pondérations par défaut (weights.ts)
   data/         Données fictives (fixtures.ts)
-  engine/       Moteur : règles métier (rules.ts), scoring (scoring.ts), recommender.ts
-  explainer/    Formatage lisible des résultats
+  engine/       Moteur : rules.ts, scoring.ts, recommender.ts, itinerary.ts
+  explainer/    Formatage lisible des résultats (créneau unique et parcours)
   scenarios/    4 scénarios prédéfinis
   types/        Types TypeScript métier
 tests/          Tests unitaires (Vitest)
