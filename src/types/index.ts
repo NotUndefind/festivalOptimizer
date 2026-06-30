@@ -56,3 +56,8 @@ export interface RecommendationResult {
   excluded: SlotScore[];
   message?: string;
 }
+
+export interface Itinerary {
+  steps: SlotScore[];
+  totalScore: number;
+}

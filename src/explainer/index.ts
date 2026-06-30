@@ -1,4 +1,4 @@
-import type { RecommendationResult, SlotScore, ScoreBreakdown, CriterionScore } from '../types/index.js';
+import type { RecommendationResult, SlotScore, ScoreBreakdown, CriterionScore, Itinerary } from '../types/index.js';
 
 const CRITERION_LABELS: Record<keyof ScoreBreakdown, string> = {
   thematic: 'Adéq. thématique',
@@ -101,6 +101,29 @@ export function explainRecommendation(result: RecommendationResult): string {
     lines.push('');
     lines.push('* valeur estimée (donnée manquante)');
   }
+
+  return lines.join('\n');
+}
+
+export function explainItinerary(itinerary: Itinerary): string {
+  if (itinerary.steps.length === 0) {
+    return 'Aucun parcours disponible pour ce profil visiteur.';
+  }
+
+  const lines: string[] = [];
+  lines.push(
+    `=== Parcours recommandé (${itinerary.steps.length} étapes — score total : ${fmt(itinerary.totalScore)}) ===`,
+  );
+  lines.push('');
+
+  itinerary.steps.forEach((step, i) => {
+    const time = formatTime(step.slot.start);
+    const [topKey] = (Object.entries(step.breakdown) as [keyof ScoreBreakdown, CriterionScore][])
+      .sort((a, b) => b[1].contribution - a[1].contribution)[0]!;
+    lines.push(
+      `  ${i + 1}. ${time} — ${step.exposition.title} — score : ${fmt(step.score)} (${CRITERION_LABELS[topKey].toLowerCase()})`,
+    );
+  });
 
   return lines.join('\n');
 }

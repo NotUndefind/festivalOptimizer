@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { explainRecommendation } from '../../src/explainer/index.js';
+import { explainRecommendation, explainItinerary } from '../../src/explainer/index.js';
 import { recommend } from '../../src/engine/recommender.js';
+import { recommendItinerary } from '../../src/engine/itinerary.js';
 import { timeSlots, expositions, visitors } from '../../src/data/fixtures.js';
 import type { RecommendationResult } from '../../src/types/index.js';
 
@@ -107,5 +108,22 @@ describe('explainRecommendation', () => {
       expect(output).toContain('└');
       expect(output).toContain('│');
     });
+  });
+});
+
+describe('explainItinerary', () => {
+  it('affiche le message vide quand le parcours est vide', () => {
+    const output = explainItinerary({ steps: [], totalScore: 0 });
+    expect(output).toContain('Aucun parcours disponible');
+  });
+
+  it('affiche chaque étape, son score et le score total', () => {
+    const visitor = visitors.find((v) => v.id === 'visitor-thematic')!;
+    const itinerary = recommendItinerary(visitor, timeSlots, expositions);
+    expect(itinerary.steps.length).toBeGreaterThan(0);
+    const output = explainItinerary(itinerary);
+    expect(output).toContain('Parcours recommandé');
+    expect(output).toContain(itinerary.steps[0]!.exposition.title);
+    expect(output).toContain(itinerary.totalScore.toFixed(2));
   });
 });
